@@ -32,11 +32,7 @@ const getUserWithEmail = function(email) {
   return pool
     .query(`SELECT * FROM users WHERE email = $1`, [email])
     .then((response) => {
-      if (response.rows.length > 0) {
-        return response.rows[0];
-      } else {
-        return null;
-      }
+      return response.rows[0];
     })
     .catch((err) => {
       console.log(err.message);
@@ -56,11 +52,7 @@ const getUserWithId = function (id) {
   return pool
     .query(`SELECT * FROM users WHERE id = $1`,[id])
     .then((response) => {
-      if (response.rows.length > 0) {
-        return response.rows[0];
-      } else {
-        return null;
-      }
+      return response.rows[0];
     })
     .catch((err) => {
       console.log(err.message);
@@ -83,11 +75,7 @@ const addUser = function (user) {
   return pool
     .query(`INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *`, [user.name, user.email, user.password,])
     .then((response) => {
-      if (response.rows.length > 0) {
-        return response.rows[0];
-      } else {
-        return null;
-      }
+      return response.rows[0];
     })
     .catch((err) => {
       console.log(err.message);
@@ -102,7 +90,28 @@ const addUser = function (user) {
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function (guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  return pool
+    .query(`
+      SELECT reservations.id, properties.title, properties.cost_per_night, properties.number_of_bedrooms, properties.number_of_bathrooms, properties.parking_spaces, reservations.start_date, reservations.end_date, avg(property_reviews.rating) as average_rating
+      FROM properties
+      JOIN reservations ON properties.id = reservations.property_id
+      JOIN property_reviews ON property_reviews.property_id = properties.id
+      WHERE reservations.guest_id = $1
+      GROUP BY properties.id, reservations.id
+      ORDER BY start_date
+      LIMIT $2
+      ;`, [guest_id, limit])
+    .then(response => {
+      console.log(response.rows);
+      if (response.rows.length > 0) {
+        return response.rows;
+      } else {
+        return null;
+      }
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 /// Properties
