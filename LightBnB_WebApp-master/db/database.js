@@ -80,9 +80,6 @@ const getUserWithId = function (id) {
 // };
 
 const addUser = function (user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
   return pool
     .query(`INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *`, [user.name, user.email, user.password,])
     .then((response) => {
@@ -94,7 +91,7 @@ const addUser = function (user) {
     })
     .catch((err) => {
       console.log(err.message);
-    })
+    });
 };
 
 /// Reservations
